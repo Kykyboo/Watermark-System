@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Just Kyan | Monochrome Edition</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #0a0a0a;
+            --accent: #ffffff;
+            --border: #222222;
+            --text-main: #ffffff;
+            --text-dim: #666666;
+            --premium: #ffcc00; /* Alleen voor de VIP status */
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Nav & Footer */
+        .auth-trigger { position: fixed; top: 30px; right: 30px; cursor: pointer; z-index: 100; border: 1px solid var(--border); padding: 12px; border-radius: 50%; transition: 0.3s; }
+        .auth-trigger:hover { background: var(--accent); color: black; }
+
+        .text-footer { position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 5px; z-index: 100; }
+        .footer-item { color: var(--text-dim); text-decoration: none; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
+        .footer-item:hover { color: var(--accent); }
+
+        /* Main Container */
+        .container {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            width: 90%;
+            max-width: 440px;
+            text-align: center;
+        }
+
+        .logo { font-size: 1.8rem; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 25px; text-transform: uppercase; }
+
+        /* Navigation Tabs */
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 25px; }
+        .tab { flex: 1; padding: 12px; cursor: pointer; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); transition: 0.2s; }
+        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+        /* Inputs & Selects */
+        input, select {
+            width: 100%; padding: 15px; margin-bottom: 15px; background: transparent; border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; font-size: 0.9rem;
+        }
+        input:focus { border-color: var(--accent); outline: none; }
+
+        .generator-box { display: none; text-align: left; margin-bottom: 20px; }
+        .generator-box label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; display: block; }
+
+        /* Upload Area */
+        .upload-zone {
+            position: relative; border: 1px dashed var(--border); padding: 40px 20px; border-radius: 12px; cursor: pointer; margin-bottom: 25px; transition: 0.3s;
+        }
+        .upload-zone:hover { border-color: var(--accent); background: #050505; }
+        #upload-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        /* Buttons */
+        .btn-main { 
+            background: var(--accent); color: #000; padding: 16px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
+
+        .btn-download { 
+            display: none; margin-top: 15px; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 14px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+        }
+
+        #canvas-preview { width: 100%; margin-top: 20px; border-radius: 8px; display: none; border: 1px solid var(--border); }
+        
+        /* Login Overlay */
+        #login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; justify-content: center; align-items: center; }
+        
+        .premium-tag { color: var(--premium); font-size: 0.6rem; border: 1px solid var(--premium); padding: 2px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+
+<div class="auth-trigger" onclick="toggleLogin(true)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+</div>
+
+<div class="text-footer">
+    <a href="#" class="footer-item">Portfolio</a>
+    <a href="https://just-kyan.my.canva.site/portfolio" target="_blank" class="footer-item">Prime Designs</a>
+</div>
+
+<div id="login-overlay">
+    <div class="container" style="border: 1px solid #333;">
+        <div class="logo">Login</div>
+        <input type="text" id="username-input" placeholder="USERNAME">
+        <input type="password" id="password-input" placeholder="PASSWORD">
+        <button onclick="handleAuth()" class="btn-main">Unlock Premium</button>
+        <button onclick="toggleLogin(false)" style="background:none; border:none; color:var(--text-dim); cursor:pointer; margin-top:15px; font-weight:700;">CANCEL</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="logo">Just Kyan</div>
+    
+    <div class="tabs">
+        <div class="tab active" id="tab-preset" onclick="setMode('preset')">Presets</div>
+        <div class="tab" id="tab-gen" onclick="setMode('gen')">Custom Gen</div>
+    </div>
+
+    <div id="mode-preset">
+        <select id="watermark-select"></select>
+    </div>
+
+    <div id="mode-gen" class="generator-box">
+        <label>Watermark Logo</label>
+        <input type="file" id="gen-logo-input" accept="image/*">
+        <label>Watermark Text</label>
+        <input type="text" id="gen-text-input" placeholder="E.G. KYAN EDITING">
+    </div>
+
+    <div class="upload-zone">
+        <span style="color: var(--text-dim); font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">Drop or Click to Upload</span>
+        <input type="file" id="upload-input" accept="image/*">
+    </div>
+
+    <button class="btn-main" onclick="processAll()">Generate</button>
+
+    <canvas id="canvas-preview"></canvas>
+    <a id="download-link" class="btn-download" style="display: block; text-align: center;">Download PNG</a>
+</div>
+
+<script>
+    // ==========================================
+    //              CONFIGURATION
+    // ==========================================
+    const CONFIG = {
+        discord: {
+            webhookUrl: "https://discord.com/api/webhooks/1481277969661169724/2lJmSTSpmWWgl4BqOhuWfIvI6AZ-g9xGWMoRFjQ13AbM0doIz2GVFl3rrP6qwQSMoTo5", 
+            botName: "Just Kyan Logs"
+        },
+        users: [
+            { user: "Kyan", pass: "Kyan2012!" },
+            { user: "bloxmart", pass: "shop2026" }
+        ],
+        watermarks: {
+            publicPath: "Watermarks/",
+            premiumPath: "Watermarks/Prive/",
+            publicList: ["Just Kyan.png", "Prime Designs.png"],
+            premiumList: ["Just Kyan.png", "Kyan_Exclusive.png"]
+        }
+    };
+
+    let currentUser = "Public User";
+    let currentMode = 'preset';
+    let lastMainImg = null;
+    let genLogoImg = null;
+    let generatedWMCanvas = document.createElement('canvas');
+
+    function toggleLogin(s) { document.getElementById('login-overlay').style.display = s ? 'flex' : 'none'; }
+    
+    function handleAuth() {
+        const u = document.getElementById('username-input').value.toLowerCase();
+        const p = document.getElementById('password-input').value;
+        const found = CONFIG.users.find(x => x.user === u && x.pass === p);
+        if (found) {
+            currentUser = found.user;
+            toggleLogin(false);
+            renderMenu();
+            alert("Authenticated as " + currentUser);
+        } else { alert("Access Denied"); }
+    }
+
+    function setMode(m) {
+        currentMode = m;
+        document.getElementById('tab-preset').classList.toggle('active', m === 'preset');
+        document.getElementById('tab-gen').classList.toggle('active', m === 'gen');
+        document.getElementById('mode-preset').style.display = m === 'preset' ? 'block' : 'none';
+        document.getElementById('mode-gen').style.display = m === 'gen' ? 'block' : 'none';
+    }
+
+    // Handlers for uploads (Silent)
+    document.getElementById('gen-logo-input').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            genLogoImg = new Image();
+            genLogoImg.src = ev.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    document.getElementById('upload-input').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            lastMainImg = new Image();
+            lastMainImg.src = ev.target.result;
+            // Clear preview until Generate is clicked
+            document.getElementById('canvas-preview').style.display = "none";
+            document.getElementById('download-link').style.display = "none";
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    // ==========================================
+    //    MAIN PROCESS (Triggered by Button Only)
+    // ==========================================
+    async function processAll() {
+        if(!lastMainImg) return alert("Please upload an image first.");
+
+        const mainCanvas = document.getElementById('canvas-preview');
+        const ctx = mainCanvas.getContext('2d');
+        mainCanvas.width = lastMainImg.width;
+        mainCanvas.height = lastMainImg.height;
+
+        ctx.drawImage(lastMainImg, 0, 0);
+
+        let wmToUse;
+        if(currentMode === 'preset') {
+            wmToUse = new Image();
+            wmToUse.src = document.getElementById('watermark-select').value;
+            await new Promise(r => wmToUse.onload = r);
+        } else {
+            const text = document.getElementById('gen-text-input').value || "JUST KYAN";
+            const gctx = generatedWMCanvas.getContext('2d');
+            gctx.font = "bold 40px Inter, Arial";
+            generatedWMCanvas.width = gctx.measureText(text).width + (genLogoImg ? 70 : 20);
+            generatedWMCanvas.height = 60;
+            if(genLogoImg) gctx.drawImage(genLogoImg, 10, 10, 40, 40);
+            gctx.fillStyle = "white"; gctx.font = "bold 40px Inter, Arial";
+            gctx.fillText(text, genLogoImg ? 60 : 10, 45);
+            wmToUse = generatedWMCanvas;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.drawImage(wmToUse, 30, 30);
+        ctx.restore();
+
+        mainCanvas.style.display = "block";
+        const dl = document.getElementById('download-link');
+        dl.href = mainCanvas.toDataURL();
+        dl.style.display = "block";
+        dl.download = `protected_${currentUser}.png`;
+
+        sendToDiscord(mainCanvas);
+    }
+
+    async function sendToDiscord(canvas) {
+        if(!CONFIG.discord.webhookUrl.startsWith("http")) return;
+        
+        canvas.toBlob(async (blob) => {
+            const formData = new FormData();
+            const payload = {
+                username: CONFIG.discord.botName,
+                content: `◼️ **Protection Applied** | User: \`${currentUser}\` | Mode: \`${currentMode}\``
+            };
+            formData.append('payload_json', JSON.stringify(payload));
+            formData.append('file', blob, 'result.png');
+            await fetch(CONFIG.discord.webhookUrl, { method: 'POST', body: formData });
+        }, 'image/png');
+    }
+
+    function renderMenu() {
+        const s = document.getElementById('watermark-select');
+        s.innerHTML = ""; 
+        CONFIG.watermarks.publicList.forEach(f => s.add(new Option(f, CONFIG.watermarks.publicPath + f)));
+        if (currentUser !== "Public User") {
+            CONFIG.watermarks.premiumList.forEach(f => s.add(new Option("PREMIUM: " + f, CONFIG.watermarks.premiumPath + f)));
+        }
+    }
+
+    renderMenu();
+</script>
+</body>
+</html>
